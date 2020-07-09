@@ -67,9 +67,8 @@ class Box(Object):
         return False
 
 class BoxManager():
-    def __init__(self, db):
+    def __init__(self):
         self.set_root()
-        self.db = db
         self.last_id = 0
 
     def set_root(self, r=None):

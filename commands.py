@@ -1,8 +1,6 @@
 import re, warnings, copy
 import boxes
 from boxes import Object, Box, BoxManager
-from tinydb import TinyDB, Query
-
 
 class Command():
     def __init__(self, bm):
@@ -223,7 +221,7 @@ def run_command(x):
     return commands[x[0]].run(x[1])
 
 # TEST
-bm = BoxManager(TinyDB('boxes.json'))
+bm = BoxManager()
 my_room = Box('My room')
 my_room.add_things(Object('Red Pencil', desc='My writing pencil!', tags=['school']))
 my_room.add_things(Object('Blue Pencil', desc='My drawing pencil!', tags=['school']))
