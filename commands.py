@@ -52,7 +52,7 @@ class mkbox(Command):
                     dest = self.bm.root
             else:
                 dest = self.bm.root
-            dest.add_things(ret)
+            print(dest.add_things(ret))
             bm.reload()
 
 class mkobj(Command):
@@ -75,7 +75,7 @@ class mkobj(Command):
                     dest = self.bm.root
             else:
                 dest = self.bm.root
-            dest.add_things(ret)
+            print(dest.add_things(ret))
             bm.reload()
 
 class tag(Command):
@@ -111,8 +111,10 @@ class rm(Command):
         
     def run(self, x):
         if super().run(x):
+            b = bm.from_id(x['i'])
             bm.delete(x['i'])
             bm.reload()
+            print('Removing', b)
             
 class cp(Command):
     def __init__(self, bm):
@@ -140,7 +142,7 @@ class cp(Command):
             dest.add_things(b2)
             bm.reload()
             if type(b2) is Box:
-                print('adding', b1, 'to', dest)
+                print('Copying', b1, 'to', dest)
                 for t in things:
                     cp(bm).run({'i1': t.id, 'i2': b2.id})
                 
@@ -175,7 +177,7 @@ class path(Command):
     def run(self, x):
         if super().run(x):
             if 'i' in x.keys():
-                print(bm.from_id(x['i']).details())
+                print('Path:', bm.get_path(x['i']))
 
 class search(Command):
     def __init__(self, bm):
@@ -218,7 +220,7 @@ def parse_command(cmd):
     return (c, flags)
 
 def run_command(x):
-    commands[x[0]].run(x[1])
+    return commands[x[0]].run(x[1])
 
 # TEST
 bm = BoxManager(TinyDB('boxes.json'))
@@ -228,7 +230,12 @@ my_room.add_things(Object('Blue Pencil', desc='My drawing pencil!', tags=['schoo
 my_room.add_things(Object('Pen', desc='For note taking!', tags=['school']))
 shelf = Box('Shelf', desc='On the left wall')
 shelf.add_things(Object('Book', desc='A nice book!', tags=['school', 'books']))
+drawer = Box('Drawer')
+drawer.add_things(Box('Other Box'))
+shelf.add_things(drawer)
+
 my_room.add_things(shelf)
+drawer.add_things(Object('Test Object :)'))
 
 bm.set_root(my_room)
 
@@ -243,16 +250,17 @@ commands = {
     'mv': mv(bm),
     'cp': cp(bm),
     'search': search(bm),
-    'path': path(bm) # TODO
+    'path': path(bm)
 }
 
-#bm.traverse_box(shelf)
-s = bm.search(name='pen', tags=['school'])
-print([str(x) for x in s])
 
 if __name__ == '__main__':
+    print('\n')
+    bm.traverse_all()
     while True:
-        inp = input('Command: ')
+        inp = input('\nCommand: ')
         cmd = parse_command(inp)
-        run_command(cmd)
+        res = run_command(cmd)
+        if res:
+            print(res)
     

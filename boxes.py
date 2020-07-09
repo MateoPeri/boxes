@@ -25,7 +25,7 @@ class Box(Object):
 
     def add_things(self, t):
         self.things.append(t)
-        print('Added', t, 'to', self)
+        return 'Added ' + str(t) + ' to ' + str(self)
 
     def __str__(self):
         return '[B_' + str(self.id) + '] ' + self.name
@@ -54,6 +54,17 @@ class Box(Object):
     def delete_child(self, thing):
         if thing in self.things:
             self.things.remove(thing)
+
+    def look_for(self, thing, lst):
+        if thing in self.things:
+            lst.append(self)
+            return True
+        if thing in self.get_all_children(-1):
+            lst.append(self)
+        for t in self.things:
+            if type(t) is Box:
+                return t.look_for(thing, lst)
+        return False
 
 class BoxManager():
     def __init__(self, db):
@@ -89,13 +100,24 @@ class BoxManager():
     def traverse_all(self):
         self.traverse_box(self.root)
 
-    def traverse_box(self, lst, level=0, indent=4):
-        print('    ' * (level - 1) + '+--- ' * (level > 0) + str(lst))
-        for l in lst.things[:]:
-            if type(l) is Box:
-                self.traverse_box(l, level + 1)
+    def traverse_box(self, box, level=0, indent=4):
+        print(' ' * indent * (level - 1) + '+---' * (level > 0) + str(box))
+        for t in box.things:
+            if type(t) is Box:
+                self.traverse_box(t, level + 1)
             else:
-                print(' ' * indent * level + '+--- ' + str(l))
+                print(' ' * indent * level + '+---' + str(t))
+
+    def get_path(self, i):
+        lst = []
+        b = self.from_id(i)
+        if b is None:
+            return False
+        if not self.root.look_for(b, lst):
+            return False
+        lst.append(b)
+        return ' > '.join([str(x) for x in lst])
+
 
     def search(self, name='', desc='', tags=[]):
         results = [self.root] + self.root.get_all_children(-1)
