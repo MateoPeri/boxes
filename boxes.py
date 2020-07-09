@@ -81,14 +81,16 @@ class BoxManager():
         self.reload()
 
     def parse_file(self, data):
-        thing = None
-        if 'things' in data:
-            thing = Box(data['name'], desc=data['desc'], tags=data['tags'])
-            for t in data['things']:
-                print(t)
-                thing.things.append(self.parse_file(t))
-        else:
-            thing = Object(data['name'], desc=data['desc'], tags=data['tags'])
+        try:
+            if 'things' in data:
+                thing = Box(data['name'], desc=data['desc'], tags=data['tags'])
+                for t in data['things']:
+                    print(t)
+                    thing.things.append(self.parse_file(t))
+            else:
+                thing = Object(data['name'], desc=data['desc'], tags=data['tags'])
+        except:
+            thing = None
         return thing
 
     def save(self):
@@ -97,16 +99,16 @@ class BoxManager():
             f.close()
 
     def load(self):
-        with open(self.file, 'r') as f:
-            try:
+        try:
+            with open(self.file, 'r') as f:
                 data = json.load(f)
-            except:
-                with open(self.file, 'w') as nf:
-                    data = {}
-                    nf.write(json.dumps(data))
-                    nf.close()
-                    
-            f.close()
+                f.close()
+        except:
+            with open(self.file, 'w') as nf:
+                data = {}
+                nf.write(json.dumps(data))
+                nf.close()
+            
         self.root = self.parse_file(data)
 
         if self.root is None:
