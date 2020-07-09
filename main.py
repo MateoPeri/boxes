@@ -1,4 +1,4 @@
-import os, json
+import os
 from boxes import Object, Box, BoxManager
 import commands as cmds
 
