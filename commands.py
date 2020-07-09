@@ -24,24 +24,24 @@ class Command():
 class ls(Command):
     def run(self, x):
         if super().run(x):
-            if len(x) == 0:
-                self.bm.traverse_all()
-            else:
+            if 'i' in x.keys():
                 self.bm.traverse_box(self.bm.from_id(x['i']))
+            else:
+                self.bm.traverse_all()
         
 class mkbox(Command):
     def __init__(self, bm):
         super().__init__(bm)
         self.req = ['n']
-        self.help = '''Create a new box.
---n: Name of the box.
---i: parent of the box. Default is root.'''
+        self.help = '''Create a new box. --n: Name of the box. --i: parent of the box. Default is root.'''
     
     def run(self, x):
         if super().run(x):
             if 'd' in x.keys(): d = x['d']
             else: d = ''
-            ret = Box(x['n'], desc=d)
+            if 't' in x.keys(): tags = parse_list(x['t'])
+            else: tags = []
+            ret = Box(x['n'], desc=d, tags=tags)
             if 'i' in x.keys():
                 dest = self.bm.from_id(x['i'])
                 if type(dest) is not Box:
@@ -56,15 +56,15 @@ class mkobj(Command):
     def __init__(self, bm):
         super().__init__(bm)
         self.req = ['n']
-        self.help = '''Create a new object.
---n: Name of the object.
---i: parent box of the object. Default is root.'''
+        self.help = '''Create a new object. --n: Name of the object. --i: parent box of the object. Default is root.'''
     
     def run(self, x):
         if super().run(x):
             if 'd' in x.keys(): d = x['d']
             else: d = ''
-            ret = Object(x['n'], desc=d)
+            if 't' in x.keys(): tags = parse_list(x['t'])
+            else: tags = []
+            ret = Object(x['n'], desc=d, tags=tags)
             if 'i' in x.keys():
                 dest = self.bm.from_id(x['i'])
                 if type(dest) is not Box:
