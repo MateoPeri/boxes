@@ -4,11 +4,11 @@ from boxes import Object, Box, BoxManager
 class Command():
     def __init__(self, bm):
         self.req = []
-        self.help = ''
+        self.help_msg = ''
         self.bm = bm
 
     def help(self):
-        print(self.help)
+        print(self.help_msg)
         print('Required Args: ' + ', '.join(self.req))
     
     def run(self, x):
@@ -33,7 +33,7 @@ class mkbox(Command):
     def __init__(self, bm):
         super().__init__(bm)
         self.req = ['n']
-        self.help = '''Create a new box. --n: Name of the box. --i: parent of the box. Default is root.'''
+        self.help_msg = '''Create a new box. --n: Name of the box. --i: parent of the box. Default is root.'''
     
     def run(self, x):
         if super().run(x):
@@ -56,7 +56,7 @@ class mkobj(Command):
     def __init__(self, bm):
         super().__init__(bm)
         self.req = ['n']
-        self.help = '''Create a new object. --n: Name of the object. --i: parent box of the object. Default is root.'''
+        self.help_msg = '''Create a new object. --n: Name of the object. --i: parent box of the object. Default is root.'''
     
     def run(self, x):
         if super().run(x):
@@ -141,7 +141,7 @@ class cp(Command):
             if type(b2) is Box:
                 print('Copying', b1, 'to', dest)
                 for t in things:
-                    cp(bm).run({'i1': t.id, 'i2': b2.id})
+                    cp(self.bm).run({'i1': t.id, 'i2': b2.id})
                 
 class mv(Command):
     def __init__(self, bm):
@@ -160,11 +160,11 @@ class info(Command):
     
     def run(self, x):
         if super().run(x):
-            print('\n')
+            det = '\n'
             if 'i' in x.keys():
-                print(self.bm.from_id(x['i']).details())
-            print(path(self.bm).run(x))
-            print('\n')
+                det += self.bm.from_id(x['i']).details()
+            det += '\n' + path(self.bm).run(x)
+            return det
 
 class path(Command):
     def __init__(self, bm):
@@ -174,7 +174,7 @@ class path(Command):
     def run(self, x):
         if super().run(x):
             if 'i' in x.keys():
-                print('Path:', self.bm.get_path(x['i']))
+                return 'Path: ' + self.bm.get_path(x['i'])
 
 class search(Command):
     def __init__(self, bm):
@@ -199,6 +199,9 @@ class search(Command):
             print('\nShowing results for ' + str(di) + ':')
             print([str(x) for x in s])
 
+class load(Command):
+    pass
+
 def parse_list(s):
     return s.strip('][').split(', ')
 
@@ -217,7 +220,7 @@ def parse_command(cmd):
 def run_command(x, bm):
     return commands[x[0]](bm).run(x[1])
 
-cmd_reg = '''(?P<CMD>^\S*)*(((?P<FLAGS>--\w+) (?P<VAL>(\'(.+)\'|[^\s]+)))*)'''
+cmd_reg = r'(?P<CMD>^\S*)*(((?P<FLAGS>--\w+) (?P<VAL>(\'(.+)\'|[^\s]+)))*)'
 
 commands = {
     'ls': ls,

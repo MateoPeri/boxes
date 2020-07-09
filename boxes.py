@@ -1,3 +1,5 @@
+import json
+
 class Object():
     def __init__(self, name, desc='', tags=[]):
         self.name = name
@@ -9,11 +11,11 @@ class Object():
         return '[O_' + str(self.id) + '] ' + self.name
 
     def details(self):
-        return self.name + ' [Box]\nDescription: ' + self.desc + \
+        return self.name + ' [Object]\nDescription: ' + self.desc + \
     '\nTags: ' + ', '.join(self.tags)
 
     def as_dict(self, recursive=False):
-        return {'name': self.name, 'desc': self.desc, 'tags': self.tags}
+        return {"name": self.name, "desc": self.desc, "tags": self.tags}
 
     def delete(self):
         del self
@@ -40,7 +42,7 @@ class Box(Object):
             ts = [t.as_dict(recursive) for t in self.things]
         else:
             ts = [str(t) for t in self.things]
-        d['things'] = ts
+        d["things"] = ts
         return d
 
     def get_all_children(self, max_lvl=0, level=0):
@@ -69,12 +71,46 @@ class Box(Object):
         return False
 
 class BoxManager():
-    def __init__(self):
-        self.set_root()
-        self.last_id = 0
+    def __init__(self, file):
+        self.file = file
+        self.root = None #
+        self.load()
 
     def set_root(self, r=None):
         self.root = r
+        self.reload()
+
+    def parse_file(self, data):
+        thing = None
+        if 'things' in data:
+            thing = Box(data['name'], desc=data['desc'], tags=data['tags'])
+            for t in data['things']:
+                print(t)
+                thing.things.append(self.parse_file(t))
+        else:
+            thing = Object(data['name'], desc=data['desc'], tags=data['tags'])
+        return thing
+
+    def save(self):
+        with open(self.file, 'w') as f:
+            f.write(json.dumps((self.root.as_dict(recursive=True))))
+            f.close()
+
+    def load(self):
+        with open(self.file, 'r') as f:
+            try:
+                data = json.load(f)
+            except:
+                with open(self.file, 'w') as nf:
+                    data = {}
+                    nf.write(json.dumps(data))
+                    nf.close()
+                    
+            f.close()
+        self.root = self.parse_file(data)
+
+        if self.root is None:
+            self.set_root(Box('root', desc='Root folder'))
         self.reload()
 
     def reload(self):
@@ -83,6 +119,7 @@ class BoxManager():
             for o in self.get_all():
                 o.id = count
                 count += 1
+        self.save()
 
     def get_all(self):
         return [self.root] + self.root.get_all_children(-1)
