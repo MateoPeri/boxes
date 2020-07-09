@@ -63,7 +63,9 @@ class Box(Object):
             lst.append(self)
         for t in self.things:
             if type(t) is Box:
-                return t.look_for(thing, lst)
+                a = t.look_for(thing, lst)
+                if a:
+                    return a
         return False
 
 class BoxManager():

@@ -1,5 +1,4 @@
 import re, warnings, copy
-import boxes
 from boxes import Object, Box, BoxManager
 
 class Command():
@@ -44,14 +43,14 @@ class mkbox(Command):
             else: d = ''
             ret = Box(x['n'], desc=d)
             if 'i' in x.keys():
-                dest = bm.from_id(x['i'])
+                dest = self.bm.from_id(x['i'])
                 if type(dest) is not Box:
                     warnings.warn('[ERROR] The given ID corresponds to an Object, not a Box.')
                     dest = self.bm.root
             else:
                 dest = self.bm.root
             print(dest.add_things(ret))
-            bm.reload()
+            self.bm.reload()
 
 class mkobj(Command):
     def __init__(self, bm):
@@ -67,14 +66,14 @@ class mkobj(Command):
             else: d = ''
             ret = Object(x['n'], desc=d)
             if 'i' in x.keys():
-                dest = bm.from_id(x['i'])
+                dest = self.bm.from_id(x['i'])
                 if type(dest) is not Box:
                     warnings.warn('[ERROR] The given ID corresponds to an Object, not a Box.')
                     dest = self.bm.root
             else:
                 dest = self.bm.root
             print(dest.add_things(ret))
-            bm.reload()
+            self.bm.reload()
 
 class tag(Command):
     def __init__(self, bm):
@@ -83,7 +82,7 @@ class tag(Command):
     
     def run(self, x):
         if super().run(x):
-            b = bm.from_id(x['i'])
+            b = self.bm.from_id(x['i'])
             if 't' in x.keys():
                 b.tags += parse_list(x['t'])
 
@@ -94,7 +93,7 @@ class edit(Command):
     
     def run(self, x):
         if super().run(x):
-            b = bm.from_id(x['i'])
+            b = self.bm.from_id(x['i'])
             if 'n' in x.keys():
                 b.name = x['n']
             if 'd' in x.keys():
@@ -109,9 +108,9 @@ class rm(Command):
         
     def run(self, x):
         if super().run(x):
-            b = bm.from_id(x['i'])
-            bm.delete(x['i'])
-            bm.reload()
+            b = self.bm.from_id(x['i'])
+            self.bm.delete(x['i'])
+            self.bm.reload()
             print('Removing', b)
             
 class cp(Command):
@@ -121,9 +120,9 @@ class cp(Command):
         
     def run(self, x):
         if super().run(x):
-            b1 = bm.from_id(x['i1'])
+            b1 = self.bm.from_id(x['i1'])
             if 'i2' in x.keys():
-                dest = bm.from_id(x['i2'])
+                dest = self.bm.from_id(x['i2'])
                 if type(dest) is not Box:
                     warnings.warn('[ERROR] The given ID corresponds to an Object, not a Box.')
                     dest = self.bm.root
@@ -138,7 +137,7 @@ class cp(Command):
                 b2 = Object(b1.name, b1.desc, b1.tags)
             
             dest.add_things(b2)
-            bm.reload()
+            self.bm.reload()
             if type(b2) is Box:
                 print('Copying', b1, 'to', dest)
                 for t in things:
@@ -151,8 +150,8 @@ class mv(Command):
 
     def run(self, x):
         if super().run(x):
-            cp(bm).run(x)
-            rm(bm).run({'i': x['i1']})
+            cp(self.bm).run(x)
+            rm(self.bm).run({'i': x['i1']})
 
 class info(Command):
     def __init__(self, bm):
@@ -163,8 +162,8 @@ class info(Command):
         if super().run(x):
             print('\n')
             if 'i' in x.keys():
-                print(bm.from_id(x['i']).details())
-            print(path(bm).run(x))
+                print(self.bm.from_id(x['i']).details())
+            print(path(self.bm).run(x))
             print('\n')
 
 class path(Command):
@@ -175,7 +174,7 @@ class path(Command):
     def run(self, x):
         if super().run(x):
             if 'i' in x.keys():
-                print('Path:', bm.get_path(x['i']))
+                print('Path:', self.bm.get_path(x['i']))
 
 class search(Command):
     def __init__(self, bm):
@@ -195,12 +194,10 @@ class search(Command):
             if 't' in x.keys():
                 ts = parse_list(x['t'])
                 di['tags'] = ts
-            s = bm.search(name=n, desc=d, tags=ts)
+            s = self.bm.search(name=n, desc=d, tags=ts)
             
             print('\nShowing results for ' + str(di) + ':')
             print([str(x) for x in s])
-
-cmd_reg = '''(?P<CMD>^\S*)*(((?P<FLAGS>--\w+) (?P<VAL>(\'(.+)\'|[^\s]+)))*)'''
 
 def parse_list(s):
     return s.strip('][').split(', ')
@@ -213,52 +210,25 @@ def parse_command(cmd):
             c = match.group('CMD')
         f = match.group('FLAGS')
         if f:
-            f = f[2:] # remove dashes
+            f = f.strip('-')
             flags[f] = match.group('VAL').strip().strip("'")
     return (c, flags)
 
-def run_command(x):
-    return commands[x[0]].run(x[1])
+def run_command(x, bm):
+    return commands[x[0]](bm).run(x[1])
 
-# TEST
-bm = BoxManager()
-my_room = Box('My room')
-my_room.add_things(Object('Red Pencil', desc='My writing pencil!', tags=['school']))
-my_room.add_things(Object('Blue Pencil', desc='My drawing pencil!', tags=['school']))
-my_room.add_things(Object('Pen', desc='For note taking!', tags=['school']))
-shelf = Box('Shelf', desc='On the left wall')
-shelf.add_things(Object('Book', desc='A nice book!', tags=['school', 'books']))
-drawer = Box('Drawer')
-drawer.add_things(Box('Other Box'))
-shelf.add_things(drawer)
-
-my_room.add_things(shelf)
-drawer.add_things(Object('Test Object :)'))
-
-bm.set_root(my_room)
+cmd_reg = '''(?P<CMD>^\S*)*(((?P<FLAGS>--\w+) (?P<VAL>(\'(.+)\'|[^\s]+)))*)'''
 
 commands = {
-    'ls': ls(bm),
-    'mkbox': mkbox(bm),
-    'mkobj': mkobj(bm),
-    'tag': tag(bm),
-    'edit': edit(bm),
-    'info': info(bm),
-    'rm': rm(bm),
-    'mv': mv(bm),
-    'cp': cp(bm),
-    'search': search(bm),
-    'path': path(bm)
+    'ls': ls,
+    'mkbox': mkbox,
+    'mkobj': mkobj,
+    'tag': tag,
+    'edit': edit,
+    'info': info,
+    'rm': rm,
+    'mv': mv,
+    'cp': cp,
+    'search': search,
+    'path': path
 }
-
-
-if __name__ == '__main__':
-    print('\n')
-    bm.traverse_all()
-    while True:
-        inp = input('\nCommand: ')
-        cmd = parse_command(inp)
-        res = run_command(cmd)
-        if res:
-            print(res)
-    
