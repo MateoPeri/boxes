@@ -8,6 +8,8 @@ Inspired by [this post](https://www.reddit.com/r/Coding_for_Teens/comments/hmqvp
 4. `python3 main.py`
 
 ## Usage
+The data is stored in a JSON file. By default, it's `boxes.json`, but you can change the path in the `main.py` script. If no file is found, a new one will be created.
+
 ### Flags
 * The flag `i` (and variants like `i1` or `i2`), corresponds to an ID of a Box/Object.
 * `n` references a name of a Box/Object.
@@ -34,7 +36,7 @@ To pass a value that contains spaces (ie "Cool object"), put it between single q
 
 
 ## Improvements and future
-* Use a database to permanently store data.
+* Use a database instead of a json file. (With [TinyDB](https://tinydb.readthedocs.io/) you can use a JSON as a database!)
 * More advanced search queries.
 * More command options.
 * More errors and warnings to inform user.
