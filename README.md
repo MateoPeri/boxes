@@ -5,8 +5,7 @@ Inspired by [this post](https://www.reddit.com/r/Coding_for_Teens/comments/hmqvp
 ## Installation
 1. Clone this repo.
 2. `cd` to the directory.
-3. `pip install -r requirements.txt`. The only requirement is [TinyDB](https://tinydb.readthedocs.io/en/stable/).
-4. `python main.py`
+4. `python3 main.py`
 
 ## Usage
 ### Flags
